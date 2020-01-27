@@ -11,31 +11,40 @@
 
 libname bdd "&path"; 
 
-/* Import Entreprise */
+/* Import BDD */
 
-proc import datafile="&path\entreprise_2020_01_27_04_00.csv"
-		            out=bdd.ent
-					dbms=csv replace;
+filename source "&path\entreprise_2020_01_27_04_00.csv" encoding="utf-8" lrecl=32767;
+
+proc import datafile=source
+		    out=bdd.ent
+		    dbms=csv replace;
 run;
 
-/* Import Avantage */
+filename source2 "&path\declaration_avantage_2020_01_27_04_00.csv" encoding="utf-8" lrecl=32767;
 
-proc import datafile="&path\declaration_avantage_2020_01_27_04_00.csv"
-		            out=bdd.avantage
-					dbms=csv replace;
-					delimiter=';';
+proc import datafile=source2
+		    out=bdd.avantage
+		    dbms=csv replace;
+			delimiter=";";
 run;
 
-proc contents data=bdd.avantage; run;
-proc print data=bdd.avantage (obs=10);run;
+filename source3 "&path\declaration_convention_2020_01_27_04_00.csv" encoding="utf-8" lrecl=32767;
 
-proc import datafile="&path\declaration_convention_2020_01_27_04_00.csv"
-		            out=bdd.convention
-					dbms=csv replace;
+proc import datafile=source3
+		    out=bdd.convention
+		    dbms=csv replace;
+			delimiter=";";
 run;
 
-proc import datafile="&path\declaration_remuneration_2020_01_27_04_00.csv"
-		            out=bdd.remuneration
-					dbms=csv replace;
+
+filename source4 "&path\declaration_remuneration_2020_01_27_04_00.csv" encoding="utf-8" lrecl=32767;
+
+proc import datafile=source4
+		    out=bdd.remuneration
+		    dbms=csv replace;
+			delimiter=";";
 run;
+
+
+
 
