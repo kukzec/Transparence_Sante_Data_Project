@@ -4,18 +4,22 @@
 /**                                             **/
 /*************************************************/
 
+/* Options */
+
+ods html close;
 
 /* Chemins */
 
-%let path = C:\Users\theloloboss\Desktop\GBD\Partie2_27012020;
+%let path = F:\Projet\GBD\Partie2_27012020;
 *%let path = C:\Users\mikew\Documents\MASTER 2 ESA\S2\BDD\Project2;
 
 libname bdd "&path"; 
 
+
 /* Import BDD */
 
 /* BDD ENT */
-
+"
 filename source "&path\entreprise_2020_01_27_04_00.csv" encoding="utf-8" lrecl=32767;
 
 data BDD.ENT    ;
@@ -431,4 +435,200 @@ data BDD.REMUNERATION;
                   remu_convention_liee  $
       ;
       if _ERROR_ then call symputx('_EFIERR_',1);  /* set ERROR detection macro variable */
-      run;
+      run; 
+
+
+/* Suppression des bugs saut à la ligne */
+
+data bdd.avantage;
+	set bdd.avantage;
+	where ligne_type = "[A]";
+	date_signature = input(avant_date_signature,ddmmyy10.);
+	if date_signature = . then delete;
+run;
+
+data bdd.convention;
+	set bdd.convention;
+	where ligne_type = "[C]";
+	date_signature = input(conv_date_signature,ddmmyy10.);
+	if date_signature = . then delete;
+run;
+
+data bdd.remuneration;
+	set bdd.remuneration;
+	where ligne_type = "[R]";
+	date_signature = input(remu_date,ddmmyy10.);
+	if date_signature = . then delete;
+run;
+
+
+/* Re-traitement majuscules/minuscules */
+/* Création d'une dummy qui prend la valeur 1 si présence d'un montant et 0 sinon */
+
+data bdd.ent;
+	set bdd.ent;
+	denomination_sociale = upcase(denomination_sociale);
+	adresse_1            = upcase(adresse_1);
+	adresse_2            = upcase(adresse_2);
+	adresse_3            = upcase(adresse_3);
+	adresse_4            = upcase(adresse_4);
+	ville                = upcase(ville);
+
+run;
+
+data bdd.convention;
+	set bdd.convention;
+	denomination_sociale            = upcase(denomination_sociale);
+	categorie                       = upcase(categorie);
+	benef_nom                       = upcase(benef_nom);
+	benef_prenom                    = upcase(benef_prenom);
+	benef_adresse1                  = upcase(benef_adresse1);
+	benef_adresse2                  = upcase(benef_adresse2);
+	benef_adresse3                  = upcase(benef_adresse3);
+	benef_adresse4                  = upcase(benef_adresse4);
+	benef_ville                     = upcase(benef_ville);
+	conv_manifestation_nom          = upcase(conv_manifestation_nom);
+	conv_manifestation_lieu         = upcase(conv_manifestation_lieu);
+	avant_convention_lie            = upcase(avant_convention_lie);
+	avant_nature                    = upcase(avant_nature);
+	conv_manifestation_organisateur = upcase(conv_manifestation_organisateur);
+
+	conv_objet_autre                = upcase(conv_objet_autre);
+
+	if conv_montant_ttc             = . then dummy_montant = 0;
+	else dummy_montant              = 1;
+run;
+
+data bdd.avantage;
+	set bdd.avantage;
+	denomination_sociale       = upcase(denomination_sociale);
+	benef_nom                  = upcase(benef_nom);
+	benef_prenom               = upcase(benef_prenom);
+	avant_nature               = upcase(avant_nature);
+	benef_adresse1             = upcase(benef_adresse1);
+	benef_adresse2             = upcase(benef_adresse2);
+	benef_adresse3             = upcase(benef_adresse3);
+	benef_adresse4             = upcase(benef_adresse4);
+	benef_ville                = upcase(benef_ville);
+    benef_objet_social         = upcase(benef_objet_social);	
+	benef_denomination_sociale = upcase(benef_denomination_sociale);
+
+	if avant_montant_ttc       = . then dummy_montant = 0;
+	else dummy_montant         = 1;
+run;
+
+data bdd.remuneration;
+	set bdd.remuneration;
+	denomination_sociale       = upcase(denomination_sociale);
+	benef_nom                  = upcase(benef_nom);
+	benef_prenom               = upcase(benef_prenom);
+	avant_nature               = upcase(avant_nature);
+	benef_adresse1             = upcase(benef_adresse1);
+	benef_adresse2             = upcase(benef_adresse2);
+	benef_adresse3             = upcase(benef_adresse3);
+	benef_adresse4             = upcase(benef_adresse4);
+	benef_ville                = upcase(benef_ville);	
+	benef_denomination_sociale = upcase(benef_denomination_sociale);
+	benef_objet_social         = upcase(benef_objet_social);
+
+	if remu_montant_ttc        = . then dummy_montant = 0;
+	else dummy_montant         = 1;
+
+run; 
+
+";
+
+/***********************************************************/
+/* Etude sur les entreprises                               */
+
+proc freq data=bdd.ent nlevels;
+	table pays ;
+run;
+
+proc freq data=bdd.ent nlevels;
+	table secteur ;
+run;
+
+/***********************************************************/
+/* Etude sur les avantages                              */
+
+proc freq data=bdd.avantage nlevels;
+	table avant_nature ;
+run;
+
+proc freq data=bdd.avantage nlevels;
+	table denomination_sociale ;
+run;
+
+proc freq data=bdd.avantage nlevels;
+	table entreprise_identifiant ;
+run;
+
+%macro ranking(table);
+proc freq data = bdd.&table. ;
+table denomination_sociale / out = &table._ranking ;
+run;
+
+proc sort data= &table._ranking;
+	by descending COUNT;
+run;
+
+proc print data=&table._ranking(obs=10);
+run;
+
+%mend;
+
+%ranking(convention);
+
+%macro freq_date(table);
+ods excel file="C:\Users\theloloboss\Desktop\GBD\Partie2_27012020\Excel\freq_date\&table..xlsx";
+proc freq data=bdd.&table.;
+format date_signature YEAR4.;
+table date_signature  ;
+run;
+ods excel close;
+%mend;
+
+%freq_date(remuneration);
+
+
+
+/* On change les tables de la lib BDD pour ne garder que les observations après 2012 */
+/*
+%macro data_after_2012(table);
+data bdd.&table.;
+	set bdd.&table.;
+	where date_signature > "31dec2011"d;
+run;
+%mend;
+
+%data_after_2012(remuneration);
+%data_after_2012(avantage);
+%data_after_2012(convention);*/
+
+/*
+%macro sort_date(table);
+proc sort data=bdd.&table.;
+	by date_signature;
+run;
+%mend;
+
+%sort_date(remuneration);
+%sort_date(avantage);
+%sort_date(convention)*/
+
+%macro freq_date_after_2012(table);
+ods excel file="F:\Projet\GBD\Partie2_27012020\Excel\freq_date\after_2012\&table..xlsx";
+proc freq data=bdd.&table. order=freq;
+format date_signature year4.;
+table denomination_sociale*date_signature / nocol norow nopercent;
+run;
+ods excel close;
+%mend;
+
+%freq_date_after_2012(remuneration);
+%freq_date_after_2012(convention);
+%freq_date_after_2012(avantage);
+
+proc print data=bdd.ent;
+where 
