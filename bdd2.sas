@@ -7,7 +7,8 @@
 
 /* Chemins */
 
-%let path = C:\Users\theloloboss\Desktop\GBD\Partie2_27012020;
+*%let path = C:\Users\theloloboss\Desktop\GBD\Partie2_27012020;
+%let path = C:\Users\mikew\Documents\MASTER 2 ESA\S2\BDD\Project2;
 
 libname bdd "&path"; 
 
@@ -18,6 +19,7 @@ filename source "&path\entreprise_2020_01_27_04_00.csv" encoding="utf-8" lrecl=3
 proc import datafile=source
 		    out=bdd.ent
 		    dbms=csv replace;
+			guessingrows=100;
 run;
 
 filename source2 "&path\declaration_avantage_2020_01_27_04_00.csv" encoding="utf-8" lrecl=32767;
@@ -26,6 +28,7 @@ proc import datafile=source2
 		    out=bdd.avantage
 		    dbms=csv replace;
 			delimiter=";";
+			guessingrows=100;
 run;
 
 filename source3 "&path\declaration_convention_2020_01_27_04_00.csv" encoding="utf-8" lrecl=32767;
@@ -34,6 +37,7 @@ proc import datafile=source3
 		    out=bdd.convention
 		    dbms=csv replace;
 			delimiter=";";
+			guessingrows=100;
 run;
 
 
@@ -43,6 +47,7 @@ proc import datafile=source4
 		    out=bdd.remuneration
 		    dbms=csv replace;
 			delimiter=";";
+			guessingrows=100;
 run;
 
 /* Suppression des bugs saut à la ligne */
@@ -138,5 +143,30 @@ table dummy_montant;
 run;
 
 
+/***********************************************************/
+/* Etude sur les entreprises                               */
+
+proc freq data=bdd.ent nlevels;
+	table pays ;
+run;
+
+proc freq data=bdd.ent nlevels;
+	table secteur ;
+run;
+
+/***********************************************************/
+/* Etude sur les avantages                              */
+
+proc freq data=bdd.avantage nlevels;
+	table avant_nature ;
+run;
+
+proc freq data=bdd.avantage nlevels;
+	table denomination_sociale ;
+run;
+
+proc freq data=bdd.avantage nlevels;
+	table entreprise_identifiant ;
+run;
 
 
