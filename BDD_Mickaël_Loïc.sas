@@ -10,8 +10,8 @@ ods html close;
 
 /* Chemins */
 
-%let path = F:\Projet\GBD\Partie2_27012020;
-*%let path = C:\Users\mikew\Documents\MASTER 2 ESA\S2\BDD\Project2;
+*%let path = F:\Projet\GBD\Partie2_27012020;
+%let path = C:\Users\mikew\Documents\MASTER 2 ESA\S2\BDD\Project2;
 
 libname bdd "&path"; 
 
@@ -541,12 +541,12 @@ run;
 /***********************************************************/
 /* Etude sur les entreprises                               */
 
-proc freq data=bdd.ent nlevels;
+proc freq data=bdd.ent nlevels order=freq;
 	table pays ;
 run;
 
-proc freq data=bdd.ent nlevels;
-	table secteur ;
+proc freq data=bdd.ent nlevels order=freq;
+	table secteur /  ;
 run;
 
 /***********************************************************/
@@ -630,5 +630,129 @@ ods excel close;
 %freq_date_after_2012(convention);
 %freq_date_after_2012(avantage);
 
-proc print data=bdd.ent;
-where 
+
+
+/* Etude sur la table rémunération */
+
+proc freq data= bdd.remuneration order=freq nlevels;
+	table categorie;
+run;
+
+ods listing;
+
+
+
+%macro mix();
+%do i= 2012 %to 2019;
+
+proc sql outobs=15 ;
+	create table remu_&i. as
+	select denomination_sociale,
+		   sum(remu_montant_ttc) as somme format eurox20.2
+	from bdd.remuneration
+	where year(date_signature) = &i.
+	group by denomination_sociale
+	order by somme desc
+; 
+quit;
+
+data remu_&i.;
+	set remu_&i.;
+	label denomination_sociale = "Nom de l'entreprise"
+	      somme = "Somme investie";
+run;
+
+%end;
+
+%mend;
+
+%mix;
+
+
+%macro mix2();
+%do i= 2012 %to 2019;
+
+proc sql outobs=10 ;
+	create table avant_&i. as
+	select denomination_sociale,
+		   sum(remu_montant_ttc) as somme format eurox20.2
+	from bdd.avantage
+	where year(date_signature) = &i.
+	group by denomination_sociale
+	order by somme desc
+; 
+quit;
+
+data avant_&i.;
+	set avant_&i.;
+	label denomination_sociale = "Nom de l'entreprise"
+	      somme = "Somme investie";
+run;
+
+
+%end;
+
+%mend;
+
+%mix2;
+
+
+ods html;
+
+%macro medecin(table,prenom,nom,code_postal);
+%put &table;
+%put &prenom;
+%put &nom;
+%put &code_postal;
+
+ 
+
+data _null_;
+table="&table.";
+call symputx("nom_prenom",compress(upcase(catx(",","&prenom.","&nom."))));
+if table="remuneration" then call symputx("table2","remu");
+else call symputx("table2","avant");
+run;
+
+%put &table;
+%put &prenom;
+%put &nom;
+%put &code_postal;
+
+ 
+
+%put &nom_prenom;
+%let scan1 = %scan("&nom_prenom.",2,",");
+%let scan2 = %scan("&nom_prenom.",1,",");
+
+%put &scan1.;
+%put &scan2.;
+
+proc sql;
+    select denomination_sociale,
+			COUNT(denomination_sociale) as NB_&table2.,
+           SUM(&table2._montant_ttc) as TOT_&table2._PERCU
+    from bdd.&table
+	where (benef_nom = "&scan1." or benef_nom = "&scan2.") and (benef_prenom = "&scan1." or benef_prenom = "&scan2.") and benef_codepostal = "&code_postal"
+	group by denomination_sociale;
+quit;
+
+%mend;
+
+%medecin(remuneration,vogt,valerie,67590);
+%medecin(remuneration,bordet,regis,59045);
+%medecin(remuneration,AOUNI,ABADIE,36160);
+
+/* Test de Listing de tous les médecins sur rémunerations */
+
+proc sql outobs=500;
+select distinct benef_identifiant_valeur,
+                benef_nom,
+				benef_prenom
+from bdd.remuneration
+where benef_categorie_code= "[PRS]"
+;  
+quit;
+
+%put &n;
+
