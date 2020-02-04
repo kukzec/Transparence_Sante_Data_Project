@@ -1,3 +1,12 @@
+
+proc sql outobs=100;
+    select t1.denomination_sociale,
+           t2.secteur,
+           sum(t1.remu_montant_ttc) as somme
+    from bdd.remuneration as t1 full join bdd.ent as t2 on t2.identifiant=t1.entreprise_identifiant
+
+    ;
+quit;
 /*************************************************/
 /**                                             **/
 /**				BDD Transparence santé         **/
@@ -755,4 +764,70 @@ where benef_categorie_code= "[PRS]"
 quit;
 
 %put &n;
+
+/* Etude sur les pays*/
+
+proc freq data=bdd.ent order=freq;
+	*table pays_code;
+table pays;
+run;
+
+data ent;
+	set bdd.ent;
+	length Region $50.;
+	select;
+		when (pays_code in ("[AE]","[AR]","[IL]","[TR]","[LB]")) Region="Moyen-Orient";
+		when (pays_code in ("[MA]","[TN]","[DZ]","[ZA]","[CI]")) Region="Afrique";
+		when (pays_code in ("[CN]","[KP]","[KR]","[HK]","[IN]","[JP]","[KZ]","[MY]","[SG]","[TH]","[TW]","[AU]","[NZ]")) Region = "Asie / Océanie";
+		when (pays_code in ("[AR]","[BR]","[CO]","[CA]","[MX]","[GY]"))Region = "Amérique";
+		when (pays_code in ("[FR]","[GP]","[GF]","[MQ]","[RE]")) Region = "France";
+		when (pays_code = "[UK]") Region = "Royaume-Uni";
+		when (pays_code = "[US]") Region = "Etats-Unis";
+		when (pays_code = "[DE]") Region = "Allemagne";
+		when (pays_code = "[CH]") Region = "Suisse";
+		when (pays_code = "[BE]") Region = "Belgique";
+		otherwise Region = "Autres pays d'Europe";
+	end;
+run;
+
+proc freq data=ent order=freq;
+table region;
+run;
+
+proc freq data=ent order=freq;
+table secteur;
+run;
+
+proc tabulate data=ent order=freq;
+	class  region secteur ;
+	table (region all),(secteur = "Type de produits vendus")*(N = "") / PRINTMISS MISSTEXT="0" INDENT=0;
+run;
+
+/* Secteur qui paye le plus*/
+
+proc sql outobs=100;
+	select t2.secteur, 
+           sum(t1.remu_montant_ttc) as somme format eurox20.2
+	from bdd.remuneration as t1 full join bdd.ent as t2 on t2.identifiant=t1.entreprise_identifiant
+	group by t2.secteur
+	order by somme desc
+
+	;
+quit;
+
+proc sql outobs=100;
+	select sum(remu_montant_ttc) as somme format eurox20.2
+	from bdd.remuneration
+	;
+quit;
+
+proc sql outobs=100;
+	select t1.denomination_sociale, 
+           sum(t1.remu_montant_ttc) as somme format eurox20.2
+	from bdd.remuneration as t1 full join bdd.ent as t2 on t2.identifiant=t1.entreprise_identifiant
+	where secteur = "Dispositifs médicaux"
+	group by t1.denomination_sociale
+	order by somme desc;
+quit;
+
 
