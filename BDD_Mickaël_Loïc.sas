@@ -1,12 +1,3 @@
-
-proc sql outobs=100;
-    select t1.denomination_sociale,
-           t2.secteur,
-           sum(t1.remu_montant_ttc) as somme
-    from bdd.remuneration as t1 full join bdd.ent as t2 on t2.identifiant=t1.entreprise_identifiant
-
-    ;
-quit;
 /*************************************************/
 /**                                             **/
 /**				BDD Transparence santé         **/
@@ -714,56 +705,49 @@ ods html;
 %put &nom;
 %put &code_postal;
 
- 
-
 data _null_;
 table="&table.";
 call symputx("nom_prenom",compress(upcase(catx(",","&prenom.","&nom."))));
 if table="remuneration" then call symputx("table2","remu");
 else call symputx("table2","avant");
+if table="remuneration" then call symputx("table3","de remunérations obtenues");
+else call symputx("table3","d'avantages obtenus");
 run;
 
 %put &table;
 %put &prenom;
 %put &nom;
 %put &code_postal;
-
- 
-
 %put &nom_prenom;
+
 %let scan1 = %scan("&nom_prenom.",2,",");
 %let scan2 = %scan("&nom_prenom.",1,",");
 
 %put &scan1.;
 %put &scan2.;
 
+%let nom2 = %sysfunc(propcase(&nom));
+%let prenom2 = %sysfunc(propcase(&prenom));
+
+title "Nombre &table3  par le médecin &nom2. &prenom2.";
 proc sql;
-    select denomination_sociale,
-			COUNT(denomination_sociale) as NB_&table2.,
-           SUM(&table2._montant_ttc) as TOT_&table2._PERCU
+    select denomination_sociale 'Société',
+			COUNT(denomination_sociale) as NB_&table2. "Nombre &table3.",
+           SUM(&table2._montant_ttc) as TOT_&table2._PERC "Montant total obtenu" format eurox20.2
     from bdd.&table
 	where (benef_nom = "&scan1." or benef_nom = "&scan2.") and (benef_prenom = "&scan1." or benef_prenom = "&scan2.") and benef_codepostal = "&code_postal"
 	group by denomination_sociale;
 quit;
+title;
 
 %mend;
 
 %medecin(remuneration,vogt,valerie,67590);
 %medecin(remuneration,bordet,regis,59045);
 %medecin(remuneration,AOUNI,ABADIE,36160);
+%medecin(remuneration,ARGENSON,JEAN-NOEL,13274);
+%medecin(avantage,vogt,valerie,67590);
 
-/* Test de Listing de tous les médecins sur rémunerations */
-
-proc sql outobs=500;
-select distinct benef_identifiant_valeur,
-                benef_nom,
-				benef_prenom
-from bdd.remuneration
-where benef_categorie_code= "[PRS]"
-;  
-quit;
-
-%put &n;
 
 /* Etude sur les pays*/
 
@@ -798,14 +782,17 @@ proc freq data=ent order=freq;
 table secteur;
 run;
 
-proc tabulate data=ent order=freq;
+title "Répartition des entreprises selon leur types de produits vendus par pays ou région d'origine";
+proc tabulate data=ent order=freq ;
 	class  region secteur ;
 	table (region all),(secteur = "Type de produits vendus")*(N = "") / PRINTMISS MISSTEXT="0" INDENT=0;
 run;
+title;
 
 /* Secteur qui paye le plus*/
 
 proc sql outobs=100;
+	create table bdd.inv_remu as
 	select t2.secteur, 
            sum(t1.remu_montant_ttc) as somme format eurox20.2
 	from bdd.remuneration as t1 full join bdd.ent as t2 on t2.identifiant=t1.entreprise_identifiant
@@ -815,6 +802,7 @@ proc sql outobs=100;
 	;
 quit;
 
+/*  test  */
 proc sql outobs=100;
 	select sum(remu_montant_ttc) as somme format eurox20.2
 	from bdd.remuneration
@@ -829,5 +817,131 @@ proc sql outobs=100;
 	group by t1.denomination_sociale
 	order by somme desc;
 quit;
+
+/* Avantage */
+
+proc sql outobs=100;
+	create table bdd.inv_avant as
+	select t2.secteur, 
+           sum(t1.avant_montant_ttc) as somme format eurox20.2
+	from bdd.avantage as t1 full join bdd.ent as t2 on t2.identifiant=t1.entreprise_identifiant
+	group by t2.secteur
+	order by somme desc
+
+	;
+quit;
+
+title "Somme totale versée à des professionnels de la santé par secteur sur la base Avantage ";
+proc print data=bdd.inv_avant label noobs;
+	label secteur= "Secteur d'activité"
+	      somme = "Montant total versé";
+run;
+title;
+
+title "Somme totale versée à des professionnels de la santé par secteur sur la base Rémunération ";
+proc print data=bdd.inv_remu label noobs;
+	label secteur= "Secteur d'activité"
+	      somme = "Montant total versé";
+run;
+title;
+
+
+/* Recherche des identifiants pour l'entreprise recherché */
+
+%macro recherche_ent(nom);
+
+%SYMDEL test;
+%let nom2 = %upcase(&nom.);
+
+data xxx;
+	set bdd.ent ;
+	where denomination_sociale contains "&nom2";
+run;
+
+ods output attributes=att;
+proc contents data=xxx ;run;
+
+data att;
+	set att;
+	where label2= "Observations";
+	if cValue2=0 then call symputx("test",cValue2);
+run;
+
+
+%if %symexist(test)=0 %then %do;
+
+title "Proposition d'identifiants pour l'entreprise demandée";
+proc sql;
+	select identifiant "Identifiant de l'entreprise",
+	       denomination_sociale "Nom de l'entreprise"
+	from bdd.ent
+	where denomination_sociale contains "&nom2.";
+quit;
+title;
+
+%end;
+
+%else %do;
+
+%put "Le nom de votre entreprise : &nom2. ne fait pas partie de notre base de données ou vous avez fais une erreur de frappe.";
+
+%end;
+
+%mend;
+
+%recherche_ent(sanofi);
+%recherche_ent(sanfi);
+%recherche_ent(blabla);
+
+/* Macro permettant de nous donné les 20 médecins auquels les entreprises ont reversé le plus d'avantage */
+
+%macro societe(table, identifiant);
+
+data _null_;
+set bdd.ent;
+where identifiant = "&identifiant";
+call symputx("ent",denomination_sociale);
+run;
+
+data _null_;
+table="&table.";
+if table=" " then call symputx("ent2","0");
+if table="remuneration" then call symputx("table5","de remunérations versées");
+else call symputx("table5","d'avantages versés");
+run;
+
+
+%if %symexist(ent)  %then %do; 
+
+title "Nombre &table5 aux professionnels de santé par l'entreprise &ent. ";
+proc sql outobs=20 ;
+	select distinct catx(" ",strip(benef_nom),strip(benef_prenom)) as Nom_Prenom "Nom du médecin",
+					sum(remu_montant_ttc) as somme "Somme versé au médecin" format eurox20.2,
+					count(*) as nb "Nombre de rémunérations versées" 
+	from bdd.&table.
+	where benef_categorie_code= "[PRS]" and entreprise_identifiant = "&identifiant"
+	group by Nom_Prenom
+	order by somme desc
+	
+;
+
+quit;
+title;
+
+%end;
+
+%else %do; 
+
+%put "L'identifiant n'existe pas dans la base de données Entreprise ou vous avez fais une erreur de frappe." ;
+
+%end;
+
+
+%mend;
+
+%societe(remuneration, LSQUFAYU);
+%societe(remuneration, NBSRCFC);
+
+
 
 
