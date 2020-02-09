@@ -1,0 +1,40 @@
+
+                                                       Le Système SAS                      08:34 Monday, February 3, 2020   3
+
+denomination_sociale                                                                                               total_remu
+ƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒ
+SANOFI-AVENTIS RECHERCHE & DEVELOPPEMENT                                                                      €308.684.963,00
+SANOFI AVENTIS FRANCE                                                                                         €173.372.345,00
+SANOFI-AVENTIS GROUPE                                                                                         €126.275.443,00
+LES LABORATOIRES SERVIER                                                                                       €98.232.359,00
+PFIZER SAS                                                                                                     €92.974.291,00
+GLAXOSMITHKLINE SANTE GRAND PUBLIC                                                                             €89.092.705,00
+NOVARTIS PHARMA SAS                                                                                            €83.575.069,00
+LABORATOIRE GLAXOSMITHKLINE                                                                                    €81.571.555,00
+BAYER HEALTHCARE SAS                                                                                           €71.344.368,00
+ARROW GENERIQUES SAS                                                                                           €64.360.682,00
+
+
+
+
+
+
+
+
+
+                                                       Le Système SAS                      08:34 Monday, February 3, 2020   4
+
+denomination_sociale                                                                                              total_avant
+ƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒ
+MSD France                                                                                                    €192.259.255,00
+NOVARTIS PHARMA SAS                                                                                            €66.137.591,00
+AMGEN SAS                                                                                                      €60.806.714,00
+SANOFI AVENTIS FRANCE                                                                                          €45.046.723,00
+ASTRAZENECA                                                                                                    €38.478.500,00
+ROCHE SAS                                                                                                      €34.719.500,00
+MicroPort CRM France SAS                                                                                       €32.005.357,00
+AbbVie                                                                                                         €31.025.836,00
+BRISTOL-MYERS SQUIBB                                                                                           €30.362.859,00
+BIOGEN FRANCE SAS                                                                                              €29.622.096,00
+
+

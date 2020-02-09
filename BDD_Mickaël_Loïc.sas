@@ -10,8 +10,8 @@ ods html close;
 
 /* Chemins */
 
-*%let path = F:\Projet\GBD\Partie2_27012020;
-%let path = C:\Users\mikew\Documents\MASTER 2 ESA\S2\BDD\Project2;
+%let path = F:\Projet\GBD\Partie2_27012020;
+*%let path = C:\Users\mikew\Documents\MASTER 2 ESA\S2\BDD\Project2;
 
 libname bdd "&path"; 
 
@@ -591,7 +591,16 @@ ods excel close;
 
 %freq_date(remuneration);
 
-
+proc sql noprint ;
+	CREATE TABLE resultat (drop=VarN VarNmiss) AS
+	SELECT conv_montant_ttc
+             , n(conv_montant_ttc) AS VarN
+             , nmiss(conv_montant_ttc) AS VarNmiss 
+             , calculated VarN + calculated VarNmiss as VarNGlobal 
+	FROM bdd.convention
+	GROUP BY conv_montant_ttc 
+	;
+quit ;
 
 /* On change les tables de la lib BDD pour ne garder que les observations après 2012 */
 /*
@@ -941,6 +950,7 @@ title;
 
 %societe(remuneration, LSQUFAYU);
 %societe(remuneration, NBSRCFC);
+
 
 
 
